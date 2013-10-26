@@ -1,0 +1,33 @@
+{
+	15パズル for Kuin 1.00
+	作成:
+		@tatt61880
+		https://twitter.com/tatt61880
+}
+
+class Piece()
+	var pos: int
+	func Init(pos: int): @Piece
+		do this.pos :: pos
+		return this
+	end func
+end class
+var Pieces: []@Piece
+
+func Main()
+	do @Pieces :: #[16]@Piece
+	for i(0, 15)
+		{do pieces[i].pos :: i {←インスタンス(#piece)を作成せずにメンバ変数(posに代入すると実行時エラーになります)}}
+		do @Pieces[i] :: (#@Piece).Init(i)
+	end for
+
+	while()
+		do Kuin@Act()
+		do drawPieces()
+	end while
+	func drawPieces()
+		foreach p(@Pieces)
+			do Dbg@Log(p.pos.ToStr()) {画像を表示する代わりに、位置をデバッグ画面に表示して確認します}
+		end foreach
+	end func
+end func
