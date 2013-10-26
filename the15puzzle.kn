@@ -1,39 +1,86 @@
 {{{
 	15パズル for Kuin 1.00
-	Last Modified: 2013/10/26 11:21:36.
+	Last Modified: 2013/10/26 16:59:35.
 
 	作成:
 		Tatt (@tatt61880)
 		https://twitter.com/tatt61880
 }}}
 
-const PieceSize: float :: 100.0
+const PieceSize: int :: 100
+const PixParFrame: int :: @PieceSize / 5
 const FontSize: int :: 72
 const FontName: []char :: "mplus-1m-regular.ttf"
 
 var Font: Draw@CFont
+enum Dir
+	Stay
+	Right
+	Left
+	Up
+	Down
+end enum
 
 class Piece()
-	var id: int
-	var num: int
-	var pos: int
-	var tex: Draw@CTex
+	-var id: int
+	-var num: int
+	-var tex: Draw@CTex
+	var posId: int
+	var pos: Pos
+	var dir: @Dir
+
 	func Init(id: int): @Piece
 		do this.id :: id
 		do this.num :: id + 1
-		do this.pos :: id
 		do this.tex :: @Font.MakeTex(@FontSize, this.num.ToStr(), 3)
+		do this.posId :: id
+		do this.pos :: (#Pos).Init(this.posId)
+		do this.dir :: @Dir#Stay
 		return this
 	end func
+
+	func GetId(): int
+		return this.id
+	end func
+
+	func Move()
+		if(this.dir = @Dir#Right)
+			do this.pos.x :+ @PixParFrame
+		elif(this.dir = @Dir#Left)
+			do this.pos.x :- @PixParFrame
+		elif(this.dir = @Dir#Up)
+			do this.pos.y :- @PixParFrame
+		elif(this.dir = @Dir#Down)
+			do this.pos.y :+ @PixParFrame
+		end if
+		if(this.pos.x % @PieceSize = 0 & this.pos.y % @PieceSize = 0)
+			do this.dir :: @Dir#Stay
+		end if
+	end func
+
+	func Draw()
+		do Draw@Rect(this.pos.x$ float + 2.0, this.pos.y$ float + 2.0, @PieceSize$ float - 4.0, @PieceSize$ float - 4.0, 1.0, 1.0, 1.0, 1.0)
+		do this.tex.Draw(0.0, 0.0, this.tex.Width(), this.tex.Height(), this.pos.x$ float + (@PieceSize$ float - this.tex.Width()) / 2.0, this.pos.y$ float, 0.0, 0.0, 1.0, 1.0)
+	end func
+
+	class Pos()
+		var x: int
+		var y: int
+		func Init(posId: int): Pos
+			do this.x :: @PieceSize * (posId % 4)
+			do this.y :: @PieceSize * (posId / 4)
+			return this
+		end func
+	end class
 end class
 var Pieces: []@Piece
 var VoidPiece: @Piece
 
 {駒の位置情報を元にその駒のidを返します}
-func FindPieceID(pos: int): int
+func FindPieceID(posId: int): int
 	foreach p(@Pieces)
-		if(p.pos = pos)
-			return p.id
+		if(p.posId = posId)
+			return p.GetId()
 		end if
 	end foreach
 	do Dbg@Log("駒が見つかりません。これはおかしいです。")
@@ -45,12 +92,12 @@ func Init(cfg: Kuin@CCfg)
 end func
 
 func Main()
+	assert @PieceSize % @PixParFrame = 0 {この条件が満たされないとバグる}
 	{フォントの初期化}
 	do @Font :: Draw@LoadFont(@FontName)
 	{駒の初期化}
 	do @Pieces :: #[16]@Piece
 	for i(0, 15)
-		{do pieces[i].pos :: i {←インスタンス(#piece)を作成せずにメンバ変数(posに代入すると実行時エラーになります)}}
 		do @Pieces[i] :: (#@Piece).Init(i)
 	end for
 	do @VoidPiece :: @Pieces[15]
@@ -64,30 +111,42 @@ func Main()
 	func drawPieces()
 		foreach p(@Pieces)
 			if(p <>& @VoidPiece)
-				var x: float :: @PieceSize * (p.pos % 4)$ float
-				var y: float :: @PieceSize * (p.pos / 4)$ float
-				do Draw@Rect(x + 2.0, y + 2.0, @PieceSize - 4.0, @PieceSize - 4.0, 1.0, 1.0, 1.0, 1.0)
-				do p.tex.Draw(0.0, 0.0, p.tex.Width(), p.tex.Height(), x + (@PieceSize - p.tex.Width()) / 2.0, y, 0.0, 0.0, 1.0, 1.0)
+				do p.Draw()
 			end if
 		end foreach
 	end func
 
 	func movePieces()
+		foreach p(@Pieces)
+			if(p.dir <> @Dir#Stay)
+				do p.Move()
+				return
+			end if
+		end foreach
+
 		if(Input@Pad(0, Input@EBtn#Right) = 1)
-			if(@VoidPiece.pos % 4 <> 0)
-				do @VoidPiece.pos :$ @Pieces[@FindPieceID(@VoidPiece.pos - 1)].pos
+			if(@VoidPiece.posId % 4 <> 0)
+				var id: int :: @FindPieceID(@VoidPiece.posId - 1)
+				do @Pieces[id].dir :: @Dir#Right
+				do @VoidPiece.posId :$ @Pieces[id].posId
 			end if
 		elif(Input@Pad(0, Input@EBtn#Left) = 1)
-			if(@VoidPiece.pos % 4 <> 3)
-				do @VoidPiece.pos :$ @Pieces[@FindPieceID(@VoidPiece.pos + 1)].pos
+			if(@VoidPiece.posId % 4 <> 3)
+				var id: int :: @FindPieceID(@VoidPiece.posId + 1)
+				do @Pieces[id].dir :: @Dir#Left
+				do @VoidPiece.posId :$ @Pieces[id].posId
 			end if
 		elif(Input@Pad(0, Input@EBtn#Up) = 1)
-			if(@VoidPiece.pos / 4 <> 3)
-				do @VoidPiece.pos :$ @Pieces[@FindPieceID(@VoidPiece.pos + 4)].pos
+			if(@VoidPiece.posId / 4 <> 3)
+				var id: int :: @FindPieceID(@VoidPiece.posId + 4)
+				do @Pieces[id].dir :: @Dir#Up
+				do @VoidPiece.posId :$ @Pieces[id].posId
 			end if
 		elif(Input@Pad(0, Input@EBtn#Down) = 1)
-			if(@VoidPiece.pos / 4 <> 0)
-				do @VoidPiece.pos :$ @Pieces[@FindPieceID(@VoidPiece.pos - 4)].pos
+			if(@VoidPiece.posId / 4 <> 0)
+				var id: int :: @FindPieceID(@VoidPiece.posId - 4)
+				do @Pieces[id].dir :: @Dir#Down
+				do @VoidPiece.posId :$ @Pieces[id].posId
 			end if
 		end if
 	end func
