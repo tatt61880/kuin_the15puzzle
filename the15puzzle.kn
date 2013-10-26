@@ -5,16 +5,33 @@
 		https://twitter.com/tatt61880
 }
 
+const PieceSize: float :: 100.0
+const FontSize: int :: 72
+const FontName: []char :: "mplus-1m-regular.ttf"
+
+var Font: Draw@CFont
+
 class Piece()
+	var id: int
 	var pos: int
-	func Init(pos: int): @Piece
-		do this.pos :: pos
+	var tex: Draw@CTex
+	func Init(id: int): @Piece
+		do this.id :: id
+		do this.pos :: id
+		do this.tex :: @Font.MakeTex(@FontSize, (id + 1).ToStr(), 3)
 		return this
 	end func
 end class
 var Pieces: []@Piece
 
+func Init(cfg: Kuin@CCfg)
+	do cfg.Title :: "THE 15 PUZZLE"
+end func
+
 func Main()
+	{フォントの初期化}
+	do @Font :: Draw@LoadFont(@FontName)
+	{駒の初期化}
 	do @Pieces :: #[16]@Piece
 	for i(0, 15)
 		{do pieces[i].pos :: i {←インスタンス(#piece)を作成せずにメンバ変数(posに代入すると実行時エラーになります)}}
@@ -27,7 +44,12 @@ func Main()
 	end while
 	func drawPieces()
 		foreach p(@Pieces)
-			do Dbg@Log(p.pos.ToStr()) {画像を表示する代わりに、位置をデバッグ画面に表示して確認します}
+			if(p.id <> 15)
+				var x: float :: @PieceSize * (p.pos % 4)$ float
+				var y: float :: @PieceSize * (p.pos / 4)$ float
+				do Draw@Rect(x + 2.0, y + 2.0, @PieceSize - 4.0, @PieceSize - 4.0, 1.0, 1.0, 1.0, 1.0)
+				do p.tex.Draw(0.0, 0.0, p.tex.Width(), p.tex.Height(), x + (@PieceSize - p.tex.Width()) / 2.0, y, 0.0, 0.0, 1.0, 1.0)
+			end if
 		end foreach
 	end func
 end func
