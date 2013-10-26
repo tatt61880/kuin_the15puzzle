@@ -1,15 +1,15 @@
 {{{
 	15パズル for Kuin 1.00
-	Last Modified: 2013/10/26 16:59:35.
+	Last Modified: 2013/10/26 17:40:50.
 
 	作成:
 		Tatt (@tatt61880)
 		https://twitter.com/tatt61880
 }}}
 
-const PieceSize: int :: 100
-const PixParFrame: int :: @PieceSize / 5
-const FontSize: int :: 72
+const PieceSize: int :: 60
+const PixelPerFrame: int :: @PieceSize / 5
+const FontSize: int :: (@PieceSize$float * 0.7)$ int
 const FontName: []char :: "mplus-1m-regular.ttf"
 
 var Font: Draw@CFont
@@ -45,13 +45,13 @@ class Piece()
 
 	func Move()
 		if(this.dir = @Dir#Right)
-			do this.pos.x :+ @PixParFrame
+			do this.pos.x :+ @PixelPerFrame
 		elif(this.dir = @Dir#Left)
-			do this.pos.x :- @PixParFrame
+			do this.pos.x :- @PixelPerFrame
 		elif(this.dir = @Dir#Up)
-			do this.pos.y :- @PixParFrame
+			do this.pos.y :- @PixelPerFrame
 		elif(this.dir = @Dir#Down)
-			do this.pos.y :+ @PixParFrame
+			do this.pos.y :+ @PixelPerFrame
 		end if
 		if(this.pos.x % @PieceSize = 0 & this.pos.y % @PieceSize = 0)
 			do this.dir :: @Dir#Stay
@@ -92,7 +92,7 @@ func Init(cfg: Kuin@CCfg)
 end func
 
 func Main()
-	assert @PieceSize % @PixParFrame = 0 {この条件が満たされないとバグる}
+	assert @PieceSize % @PixelPerFrame = 0 {この条件が満たされている前提で駒の移動処理を行います}
 	{フォントの初期化}
 	do @Font :: Draw@LoadFont(@FontName)
 	{駒の初期化}
