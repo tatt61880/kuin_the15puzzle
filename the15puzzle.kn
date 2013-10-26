@@ -1,6 +1,6 @@
 {{{
 	15パズル for Kuin 1.00
-	Last Modified: 2013/10/26 11:14:06.
+	Last Modified: 2013/10/26 11:21:36.
 
 	作成:
 		Tatt (@tatt61880)
@@ -76,6 +76,18 @@ func Main()
 		if(Input@Pad(0, Input@EBtn#Right) = 1)
 			if(@VoidPiece.pos % 4 <> 0)
 				do @VoidPiece.pos :$ @Pieces[@FindPieceID(@VoidPiece.pos - 1)].pos
+			end if
+		elif(Input@Pad(0, Input@EBtn#Left) = 1)
+			if(@VoidPiece.pos % 4 <> 3)
+				do @VoidPiece.pos :$ @Pieces[@FindPieceID(@VoidPiece.pos + 1)].pos
+			end if
+		elif(Input@Pad(0, Input@EBtn#Up) = 1)
+			if(@VoidPiece.pos / 4 <> 3)
+				do @VoidPiece.pos :$ @Pieces[@FindPieceID(@VoidPiece.pos + 4)].pos
+			end if
+		elif(Input@Pad(0, Input@EBtn#Down) = 1)
+			if(@VoidPiece.pos / 4 <> 0)
+				do @VoidPiece.pos :$ @Pieces[@FindPieceID(@VoidPiece.pos - 4)].pos
 			end if
 		end if
 	end func
