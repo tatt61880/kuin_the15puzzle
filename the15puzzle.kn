@@ -1,24 +1,28 @@
 {{{
 	15パズル for Kuin 1.00
-	Last Modified: 2013/10/27 20:43:07.
+	Last Modified: 2013/10/27 22:04:26.
 
 	作成:
 		Tatt (@tatt61880)
 		https://twitter.com/tatt61880
 }}}
 
+const SuperEasyMode: bool :: false
+const EasyMode: bool :: true
 const PieceSize: int :: 200
 const ShuffleNum: int :: 1000
 const PixelPerFrame: int :: @PieceSize / 4
 const FontSize: int :: (@PieceSize$float * 0.7)$ int
 const FontName: []char :: "mplus-1m-regular.ttf"
 const TexName: []char :: "kuina-chan_b2.kntex"
+const CompleteTexName: []char :: "complete.kntex"
 const TexSize: float :: 240.0
 
 var Font: Draw@CFont
 var Tex: Draw@CTex
 var TextTex: Draw@CTex
 var TextTex2: Draw@CTex
+var CompleteTex: Draw@CTex
 enum Dir
 	Stay
 	Left :: 1
@@ -65,13 +69,13 @@ class Piece()
 	end func
 
 	func Draw()
-		if(false)
+		if(@SuperEasyMode)
 			{普通の15パズル}
 			do Draw@Rect(this.pos.x$ float + 2.0, this.pos.y$ float + 2.0, @PieceSize$ float - 4.0, @PieceSize$ float - 4.0, 1.0, 1.0, 1.0, 1.0)
 			do this.tex.Draw(0.0, 0.0, this.tex.Width(), this.tex.Height(), this.pos.x$ float + (@PieceSize$ float - this.tex.Width()) / 2.0, this.pos.y$ float, 0.0, 0.0, 1.0, 1.0)
 		else
 			{イラスト版15パズル}
-			do @Tex.DrawScale((Kuin@Cnt()$ float + (this.id % 4)$ float * @TexSize * 0.25) % @TexSize, (this.id / 4)$ float * @TexSize * 0.25, @TexSize * 0.25, @TexSize * 0.25, this.pos.x$ float, this.pos.y$ float, @PieceSize$ float, @PieceSize$ float, 1.0, 1.0, 1.0, 1.0)
+			do @Tex.DrawScale((Kuin@Cnt()$ float + (this.id % 4)$ float * @TexSize * 0.25) % @TexSize, (Kuin@Cnt()$ float * (@EasyMode ?(0.0, 0.25)) + (this.id / 4)$ float * @TexSize * 0.25) % @TexSize, @TexSize * 0.25, @TexSize * 0.25, this.pos.x$ float, this.pos.y$ float, @PieceSize$ float, @PieceSize$ float, 1.0, 1.0, 1.0, 1.0)
 		end if
 	end func
 
@@ -111,25 +115,35 @@ func Main()
 	{画像の初期化}
 	do @Tex :: Draw@LoadTex(@TexName)
 	assert @Tex <>& null
-	do @TextTex :: @Font.MakeTex(30, "Kuinの作者くいなちゃんのイラストで遊ぶ15パズルです。", 3)
+	if(@SuperEasyMode)
+		do @TextTex :: @Font.MakeTex(30, "普通の15パズル(スーパーイージーモード)です。", 3)
+		do @TextTex2 :: @Font.MakeTex(30, "", 3)
+	else
+		do @TextTex :: @Font.MakeTex(30, "Kuinの作者くいなちゃんのイラストで遊ぶ15パズルです。", 3)
+		do @TextTex2 :: @Font.MakeTex(30, "※イラストの作者はくいなちゃんです。", 3)
+	end if
 	assert @TextTex <>& null
-	do @TextTex2 :: @Font.MakeTex(30, "※イラストの作者はくいなちゃんです。", 3)
 	assert @TextTex2 <>& null
+	do @CompleteTex :: Draw@LoadTex(@CompleteTexName)
+	assert @CompleteTex <>& null
 	{駒の初期化}
 	do @Pieces :: #[16]@Piece
 	for i(0, 15)
 		do @Pieces[i] :: (#@Piece).Init(i)
 	end for
 	do @VoidPiece :: @Pieces[15]
-	{
 	do @ShufflePieces()
-	}
 
 	while a()
 		do Kuin@Act()
 		do drawPieces()
 		do @TextTex.Draw(0.0, 0.0, @TextTex.Width(), @TextTex.Height(), 0.0, @PieceSize$ float * 4.0, 1.0, 1.0, 1.0, 1.0)
 		do @TextTex2.Draw(0.0, 0.0, @TextTex2.Width(), @TextTex2.Height(), 0.0, @PieceSize$ float * 4.0 + @TextTex.Height(), 1.0, 1.0, 1.0, 1.0)
+		if(!@SuperEasyMode)
+			if(@CompleteCheck())
+				do @CompleteTex.Draw(0.0, 0.0, @CompleteTex.Width(), @CompleteTex.Height(), @PieceSize$ float * 4.0, @PieceSize$ float * 2.0, 1.0, 1.0, 1.0, 1.0)
+			end if
+		end if
 		foreach p(@Pieces) {移動アニメーション用のループです}
 			if(p.dir <> @Dir#Stay)
 				do p.Move(@PixelPerFrame)
@@ -207,3 +221,11 @@ func ShufflePieces()
 	end for
 end func
 
+func CompleteCheck(): bool
+	foreach p(@Pieces)
+		if(p.GetId() <> p.posId)
+			return false
+		end if
+	end foreach
+	return true
+end func
