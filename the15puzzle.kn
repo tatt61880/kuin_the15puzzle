@@ -1,23 +1,28 @@
 {{{
 	15パズル for Kuin 1.00
-	Last Modified: 2013/10/27 13:47:05.
+	Last Modified: 2013/10/27 20:43:07.
 
 	作成:
 		Tatt (@tatt61880)
 		https://twitter.com/tatt61880
 }}}
 
-const PieceSize: int :: 60
+const PieceSize: int :: 200
 const ShuffleNum: int :: 1000
 const PixelPerFrame: int :: @PieceSize / 4
 const FontSize: int :: (@PieceSize$float * 0.7)$ int
 const FontName: []char :: "mplus-1m-regular.ttf"
+const TexName: []char :: "kuina-chan_b2.kntex"
+const TexSize: float :: 240.0
 
 var Font: Draw@CFont
+var Tex: Draw@CTex
+var TextTex: Draw@CTex
+var TextTex2: Draw@CTex
 enum Dir
 	Stay
-	Right :: 1
-	Left :: 2
+	Left :: 1
+	Right :: 2
 	Up :: 3
 	Down :: 4
 end enum
@@ -45,10 +50,10 @@ class Piece()
 	end func
 
 	func Move(pixelPerFrame: int)
-		if(this.dir = @Dir#Right)
-			do this.pos.x :+ pixelPerFrame
-		elif(this.dir = @Dir#Left)
+		if(this.dir = @Dir#Left)
 			do this.pos.x :- pixelPerFrame
+		elif(this.dir = @Dir#Right)
+			do this.pos.x :+ pixelPerFrame
 		elif(this.dir = @Dir#Up)
 			do this.pos.y :- pixelPerFrame
 		elif(this.dir = @Dir#Down)
@@ -60,8 +65,14 @@ class Piece()
 	end func
 
 	func Draw()
-		do Draw@Rect(this.pos.x$ float + 2.0, this.pos.y$ float + 2.0, @PieceSize$ float - 4.0, @PieceSize$ float - 4.0, 1.0, 1.0, 1.0, 1.0)
-		do this.tex.Draw(0.0, 0.0, this.tex.Width(), this.tex.Height(), this.pos.x$ float + (@PieceSize$ float - this.tex.Width()) / 2.0, this.pos.y$ float, 0.0, 0.0, 1.0, 1.0)
+		if(false)
+			{普通の15パズル}
+			do Draw@Rect(this.pos.x$ float + 2.0, this.pos.y$ float + 2.0, @PieceSize$ float - 4.0, @PieceSize$ float - 4.0, 1.0, 1.0, 1.0, 1.0)
+			do this.tex.Draw(0.0, 0.0, this.tex.Width(), this.tex.Height(), this.pos.x$ float + (@PieceSize$ float - this.tex.Width()) / 2.0, this.pos.y$ float, 0.0, 0.0, 1.0, 1.0)
+		else
+			{イラスト版15パズル}
+			do @Tex.DrawScale((Kuin@Cnt()$ float + (this.id % 4)$ float * @TexSize * 0.25) % @TexSize, (this.id / 4)$ float * @TexSize * 0.25, @TexSize * 0.25, @TexSize * 0.25, this.pos.x$ float, this.pos.y$ float, @PieceSize$ float, @PieceSize$ float, 1.0, 1.0, 1.0, 1.0)
+		end if
 	end func
 
 	class Pos()
@@ -96,17 +107,29 @@ func Main()
 	assert @PieceSize % @PixelPerFrame = 0 {この条件が満たされている前提で駒の移動処理を行います}
 	{フォントの初期化}
 	do @Font :: Draw@LoadFont(@FontName)
+	assert @Font <>& null
+	{画像の初期化}
+	do @Tex :: Draw@LoadTex(@TexName)
+	assert @Tex <>& null
+	do @TextTex :: @Font.MakeTex(30, "Kuinの作者くいなちゃんのイラストで遊ぶ15パズルです。", 3)
+	assert @TextTex <>& null
+	do @TextTex2 :: @Font.MakeTex(30, "※イラストの作者はくいなちゃんです。", 3)
+	assert @TextTex2 <>& null
 	{駒の初期化}
 	do @Pieces :: #[16]@Piece
 	for i(0, 15)
 		do @Pieces[i] :: (#@Piece).Init(i)
 	end for
 	do @VoidPiece :: @Pieces[15]
+	{
 	do @ShufflePieces()
+	}
 
 	while a()
 		do Kuin@Act()
 		do drawPieces()
+		do @TextTex.Draw(0.0, 0.0, @TextTex.Width(), @TextTex.Height(), 0.0, @PieceSize$ float * 4.0, 1.0, 1.0, 1.0, 1.0)
+		do @TextTex2.Draw(0.0, 0.0, @TextTex2.Width(), @TextTex2.Height(), 0.0, @PieceSize$ float * 4.0 + @TextTex.Height(), 1.0, 1.0, 1.0, 1.0)
 		foreach p(@Pieces) {移動アニメーション用のループです}
 			if(p.dir <> @Dir#Stay)
 				do p.Move(@PixelPerFrame)
@@ -135,10 +158,10 @@ func SetDirection(shuffleMode: bool)
 	if(shuffleMode)
 		do dir :: Rnd@Get(1, 4)$ @Dir
 	else
-		if(Input@Pad(0, Input@EBtn#Right) % 15 = 1)
-			do dir :: @Dir#Right
-		elif(Input@Pad(0, Input@EBtn#Left) % 15 = 1)
+		if(Input@Pad(0, Input@EBtn#Left) % 15 = 1)
 			do dir :: @Dir#Left
+		elif(Input@Pad(0, Input@EBtn#Right) % 15 = 1)
+			do dir :: @Dir#Right
 		elif(Input@Pad(0, Input@EBtn#Up) % 15 = 1)
 			do dir :: @Dir#Up
 		elif(Input@Pad(0, Input@EBtn#Down) % 15 = 1)
@@ -147,15 +170,15 @@ func SetDirection(shuffleMode: bool)
 	end if
 
 	switch d(dir)
-	case(@Dir#Right)
-		if(@VoidPiece.posId % 4 <> 0)
-			do id :: @FindPieceID(@VoidPiece.posId - 1)
-			do @Pieces[id].dir :: d
-			do @VoidPiece.posId :$ @Pieces[id].posId
-		end if
 	case(@Dir#Left)
 		if(@VoidPiece.posId % 4 <> 3)
 			do id :: @FindPieceID(@VoidPiece.posId + 1)
+			do @Pieces[id].dir :: d
+			do @VoidPiece.posId :$ @Pieces[id].posId
+		end if
+	case(@Dir#Right)
+		if(@VoidPiece.posId % 4 <> 0)
+			do id :: @FindPieceID(@VoidPiece.posId - 1)
 			do @Pieces[id].dir :: d
 			do @VoidPiece.posId :$ @Pieces[id].posId
 		end if
