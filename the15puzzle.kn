@@ -1,6 +1,6 @@
 {{{
 	15パズル for Kuin 1.00
-	Last Modified: 2013/10/26 17:40:50.
+	Last Modified: 2013/10/27 13:34:59.
 
 	作成:
 		Tatt (@tatt61880)
@@ -8,17 +8,18 @@
 }}}
 
 const PieceSize: int :: 60
-const PixelPerFrame: int :: @PieceSize / 5
+const ShuffleNum: int :: 1000
+const PixelPerFrame: int :: @PieceSize / 4
 const FontSize: int :: (@PieceSize$float * 0.7)$ int
 const FontName: []char :: "mplus-1m-regular.ttf"
 
 var Font: Draw@CFont
 enum Dir
 	Stay
-	Right
-	Left
-	Up
-	Down
+	Right :: 1
+	Left :: 2
+	Up :: 3
+	Down :: 4
 end enum
 
 class Piece()
@@ -43,15 +44,15 @@ class Piece()
 		return this.id
 	end func
 
-	func Move()
+	func Move(pixelPerFrame: int)
 		if(this.dir = @Dir#Right)
-			do this.pos.x :+ @PixelPerFrame
+			do this.pos.x :+ pixelPerFrame
 		elif(this.dir = @Dir#Left)
-			do this.pos.x :- @PixelPerFrame
+			do this.pos.x :- pixelPerFrame
 		elif(this.dir = @Dir#Up)
-			do this.pos.y :- @PixelPerFrame
+			do this.pos.y :- pixelPerFrame
 		elif(this.dir = @Dir#Down)
-			do this.pos.y :+ @PixelPerFrame
+			do this.pos.y :+ pixelPerFrame
 		end if
 		if(this.pos.x % @PieceSize = 0 & this.pos.y % @PieceSize = 0)
 			do this.dir :: @Dir#Stay
@@ -101,11 +102,22 @@ func Main()
 		do @Pieces[i] :: (#@Piece).Init(i)
 	end for
 	do @VoidPiece :: @Pieces[15]
+	do @ShufflePieces()
 
-	while()
+	while a()
 		do Kuin@Act()
-		do movePieces()
 		do drawPieces()
+		foreach p(@Pieces) {移動アニメーション用のループです}
+			if(p.dir <> @Dir#Stay)
+				do p.Move(@PixelPerFrame)
+				continue a {移動中にマウス入力を受け付けないように、ここでwhileループの先頭に戻ります}
+			end if
+		end foreach
+
+		do @MovePieces(false)
+		if(Input@Pad(0, Input@EBtn#A) > 0)
+			do @ShufflePieces()
+		end if
 	end while
 
 	func drawPieces()
@@ -115,39 +127,60 @@ func Main()
 			end if
 		end foreach
 	end func
-
-	func movePieces()
-		foreach p(@Pieces)
-			if(p.dir <> @Dir#Stay)
-				do p.Move()
-				return
-			end if
-		end foreach
-
-		if(Input@Pad(0, Input@EBtn#Right) = 1)
-			if(@VoidPiece.posId % 4 <> 0)
-				var id: int :: @FindPieceID(@VoidPiece.posId - 1)
-				do @Pieces[id].dir :: @Dir#Right
-				do @VoidPiece.posId :$ @Pieces[id].posId
-			end if
-		elif(Input@Pad(0, Input@EBtn#Left) = 1)
-			if(@VoidPiece.posId % 4 <> 3)
-				var id: int :: @FindPieceID(@VoidPiece.posId + 1)
-				do @Pieces[id].dir :: @Dir#Left
-				do @VoidPiece.posId :$ @Pieces[id].posId
-			end if
-		elif(Input@Pad(0, Input@EBtn#Up) = 1)
-			if(@VoidPiece.posId / 4 <> 3)
-				var id: int :: @FindPieceID(@VoidPiece.posId + 4)
-				do @Pieces[id].dir :: @Dir#Up
-				do @VoidPiece.posId :$ @Pieces[id].posId
-			end if
-		elif(Input@Pad(0, Input@EBtn#Down) = 1)
-			if(@VoidPiece.posId / 4 <> 0)
-				var id: int :: @FindPieceID(@VoidPiece.posId - 4)
-				do @Pieces[id].dir :: @Dir#Down
-				do @VoidPiece.posId :$ @Pieces[id].posId
-			end if
-		end if
-	end func
 end func
+
+func MovePieces(shuffleMode: bool)
+	var id: int
+	var dir: @Dir
+	if(shuffleMode)
+		do dir :: Rnd@Get(1, 4)$ @Dir
+	else
+		if(Input@Pad(0, Input@EBtn#Right) % 15 = 1)
+			do dir :: @Dir#Right
+		elif(Input@Pad(0, Input@EBtn#Left) % 15 = 1)
+			do dir :: @Dir#Left
+		elif(Input@Pad(0, Input@EBtn#Up) % 15 = 1)
+			do dir :: @Dir#Up
+		elif(Input@Pad(0, Input@EBtn#Down) % 15 = 1)
+			do dir :: @Dir#Down
+		end if
+	end if
+
+	switch d(dir)
+	case(@Dir#Right)
+		if(@VoidPiece.posId % 4 <> 0)
+			do id :: @FindPieceID(@VoidPiece.posId - 1)
+			do @Pieces[id].dir :: d
+			do @VoidPiece.posId :$ @Pieces[id].posId
+		end if
+	case(@Dir#Left)
+		if(@VoidPiece.posId % 4 <> 3)
+			do id :: @FindPieceID(@VoidPiece.posId + 1)
+			do @Pieces[id].dir :: d
+			do @VoidPiece.posId :$ @Pieces[id].posId
+		end if
+	case(@Dir#Up)
+		if(@VoidPiece.posId / 4 <> 3)
+			do id :: @FindPieceID(@VoidPiece.posId + 4)
+			do @Pieces[id].dir :: d
+			do @VoidPiece.posId :$ @Pieces[id].posId
+		end if
+	case(@Dir#Down)
+		if(@VoidPiece.posId / 4 <> 0)
+			do id :: @FindPieceID(@VoidPiece.posId - 4)
+			do @Pieces[id].dir :: d
+			do @VoidPiece.posId :$ @Pieces[id].posId
+		end if
+	end switch
+
+	if(shuffleMode)
+		do @Pieces[id].Move(@PieceSize)
+	end if
+end func
+
+func ShufflePieces()
+	for i(1, @ShuffleNum)
+		do @MovePieces(true)
+	end for
+end func
+
