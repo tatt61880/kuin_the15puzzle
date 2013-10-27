@@ -1,6 +1,6 @@
 {{{
 	15パズル for Kuin 1.00
-	Last Modified: 2013/10/27 22:04:26.
+	Last Modified: 2013/10/28 00:48:57.
 
 	作成:
 		Tatt (@tatt61880)
@@ -168,7 +168,7 @@ end func
 
 func SetDirection(shuffleMode: bool)
 	var id: int
-	var dir: @Dir
+	var dir: @Dir :: @Dir#Stay
 	if(shuffleMode)
 		do dir :: Rnd@Get(1, 4)$ @Dir
 	else
