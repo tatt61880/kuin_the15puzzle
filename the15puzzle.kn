@@ -1,6 +1,6 @@
 {{{
 	15パズル for Kuin 1.00
-	Last Modified: 2013/10/27 13:34:59.
+	Last Modified: 2013/10/27 13:47:05.
 
 	作成:
 		Tatt (@tatt61880)
@@ -114,7 +114,7 @@ func Main()
 			end if
 		end foreach
 
-		do @MovePieces(false)
+		do @SetDirection(false)
 		if(Input@Pad(0, Input@EBtn#A) > 0)
 			do @ShufflePieces()
 		end if
@@ -129,7 +129,7 @@ func Main()
 	end func
 end func
 
-func MovePieces(shuffleMode: bool)
+func SetDirection(shuffleMode: bool)
 	var id: int
 	var dir: @Dir
 	if(shuffleMode)
@@ -180,7 +180,7 @@ end func
 
 func ShufflePieces()
 	for i(1, @ShuffleNum)
-		do @MovePieces(true)
+		do @SetDirection(true)
 	end for
 end func
 
