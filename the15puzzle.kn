@@ -1,6 +1,6 @@
 {{{
 	15パズル for Kuin 1.01
-	Last Modified: 2017/04/21 00:59:21.
+	Last Modified: 2017/04/21 01:07:25.
 
 	作成:
 		Tatt (@tatt61880)
@@ -18,7 +18,7 @@ const mode: @Mode :: %normal
 const pieceSize: int :: 120
 const shuffleNum: int :: 1000
 const pixelPerFrame: int :: @pieceSize / 4
-const imageFilename: []char :: "res/kuina-chan.png"
+const imageFilename: []char :: "res/image.png"
 const completeFilename: []char :: "res/complete.png"
 const imageSize: float :: 400.0
 const windowWidth: int :: @pieceSize * 8 + 10
@@ -29,13 +29,12 @@ var completeImage: draw@Tex
 const completeImageWidth: float :: 400.0
 const completeImageHeight: float :: 400.0
 var cnt: int
-var wndMain: wnd@Wnd
 
 func main()
 	assert @mode <> %easy {イージーモードは未完成なのです}
 	assert @pieceSize % @pixelPerFrame = 0 {この条件が満たされている前提で駒の移動処理を行います}
-	do @wndMain :: wnd@makeWnd(null, %normal, @windowWidth, @windowHeight, "THE 15 PUZZLE")
-	var drawMain: wnd@Draw :: wnd@makeDraw(@wndMain, 0, 0, 1600, 900, %fix, %fix)
+	var wndMain: wnd@Wnd :: wnd@makeWnd(null, %normal, @windowWidth, @windowHeight, "THE 15 PUZZLE")
+	var drawMain: wnd@Draw :: wnd@makeDraw(wndMain, 0, 0, 1600, 900, %fix, %fix)
 
 	{画像の初期化}
 	do @image :: draw@makeTex(@imageFilename)
@@ -53,9 +52,9 @@ func main()
 
 	{
 	if(@mode = %easy)
-		do wnd@makeLabel(@wndMain, 0, @pieceSize * 4, 500, 50, %fix, %fix, "普通の15パズル(スーパーイージーモード)です。")
+		do wnd@makeLabel(wndMain, 0, @pieceSize * 4, 500, 50, %fix, %fix, "普通の15パズル(イージーモード)です。")
 	else
-		do wnd@makeLabel(@wndMain, 0, @pieceSize * 4, 500, 50, %fix, %fix, "Kuinの作者くいなちゃんのイラストで遊ぶ15パズルです。")
+		do wnd@makeLabel(wndMain, 0, @pieceSize * 4, 500, 50, %fix, %fix, "Kuinの作者くいなちゃんのイラストで遊ぶ15パズルです。")
 	end if
 	}
 
@@ -188,7 +187,6 @@ class Piece()
 		end func
 	end class
 end class
-
 
 func setDirection(shuffleMode: bool)
 	var id: int
