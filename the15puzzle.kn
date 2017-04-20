@@ -1,233 +1,273 @@
 {{{
 	15パズル for Kuin 1.01
-	Last Modified: 2016/03/29 04:38:40.
+	Last Modified: 2017/04/21 00:59:21.
 
 	作成:
 		Tatt (@tatt61880)
 		https://twitter.com/tatt61880
 }}}
 
-const SuperEasyMode: bool :: false
-const EasyMode: bool :: true
-const PieceSize: int :: 200
-const ShuffleNum: int :: 1000
-const PixelPerFrame: int :: @PieceSize / 4
-{
-const FontSize: int :: (@PieceSize$float * 0.7)$ int
-}
-const FontSize: int :: 117 {Kuin 1.01だと大きな値になっていると落ちるため、落ちないぎりぎりのサイズに変更}
-const TexName: []char :: "kuina-chan_b2.kntex"
-const CompleteTexName: []char :: "complete.kntex"
-const TexSize: float :: 240.0
-
-var Tex: Draw@CTex
-var TextFont: Draw@CFont
-var TextFont2: Draw@CFont
-var CompleteTex: Draw@CTex
-enum Dir
-	Stay
-	Left :: 1
-	Right :: 2
-	Up :: 3
-	Down :: 4
+enum Mode
+	veryHard
+	hard
+	normal
+	easy
 end enum
+const mode: @Mode :: %normal
+
+const pieceSize: int :: 120
+const shuffleNum: int :: 1000
+const pixelPerFrame: int :: @pieceSize / 4
+const imageFilename: []char :: "res/kuina-chan.png"
+const completeFilename: []char :: "res/complete.png"
+const imageSize: float :: 400.0
+const windowWidth: int :: @pieceSize * 8 + 10
+const windowHeight: int :: @pieceSize * 4 + 50
+
+var image: draw@Tex
+var completeImage: draw@Tex
+const completeImageWidth: float :: 400.0
+const completeImageHeight: float :: 400.0
+var cnt: int
+var wndMain: wnd@Wnd
+
+func main()
+	assert @mode <> %easy {イージーモードは未完成なのです}
+	assert @pieceSize % @pixelPerFrame = 0 {この条件が満たされている前提で駒の移動処理を行います}
+	do @wndMain :: wnd@makeWnd(null, %normal, @windowWidth, @windowHeight, "THE 15 PUZZLE")
+	var drawMain: wnd@Draw :: wnd@makeDraw(@wndMain, 0, 0, 1600, 900, %fix, %fix)
+
+	{画像の初期化}
+	do @image :: draw@makeTex(@imageFilename)
+	assert @image <>& null
+	do @completeImage :: draw@makeTex(@completeFilename)
+	assert @completeImage <>& null
+
+	{駒の初期化}
+	do @pieces :: #[16]@Piece
+	for i(0, 15)
+		do @pieces[i] :: (#@Piece).init(i)
+	end for
+	do @voidPiece :: @pieces[15]
+	do @shufflePieces()
+
+	{
+	if(@mode = %easy)
+		do wnd@makeLabel(@wndMain, 0, @pieceSize * 4, 500, 50, %fix, %fix, "普通の15パズル(スーパーイージーモード)です。")
+	else
+		do wnd@makeLabel(@wndMain, 0, @pieceSize * 4, 500, 50, %fix, %fix, "Kuinの作者くいなちゃんのイラストで遊ぶ15パズルです。")
+	end if
+	}
+
+	while a(wnd@act())
+		{ 見本 }
+		do @image.drawScale(
+		|	@pieceSize $ float * 4.0 + 10.0, 0.0,
+		|	@pieceSize $ float * 4.0,
+		|	@pieceSize $ float * 4.0,
+		|	0.0,
+		|	0.0,
+		|	@imageSize,
+		|	@imageSize
+		|)
+		if(@mode = %hard | @mode = %veryHard)
+			do @cnt :+ 1
+		end if
+		do drawPieces()
+		if(@mode <> %easy)
+			if(@checkComplete())
+				do @completeImage.draw(
+				|	@windowWidth $ float / 2.0 - @completeImageWidth / 2.0,
+				|	@windowHeight $ float / 2.0 - @completeImageHeight / 2.0,
+				|	0.0, 0.0,
+				|	@completeImageWidth, @completeImageHeight)
+			end if
+		end if
+		foreach p(@pieces) {移動アニメーション用のループです}
+			if(p.dir <> %stay)
+				do p.move(@pixelPerFrame)
+				skip a {移動中にマウス入力を受け付けないように、ここでwhileループの先頭に戻ります}
+			end if
+		end foreach
+
+		do @setDirection(false)
+		if(input@pad(0, %a) > 0)
+			do @shufflePieces()
+		end if
+
+		do draw@render(30)
+	end while
+
+	func drawPieces()
+		foreach p(@pieces)
+			if(p <>& @voidPiece)
+				do p.draw()
+			end if
+		end foreach
+	end func
+end func
+
+var pieces: []@Piece
+var voidPiece: @Piece
 
 class Piece()
-	-var id: int
-	-var num: int
-	-var font: Draw@CFont
-	var posId: int
-	var pos: Pos
-	var dir: @Dir
+	var id: int
+	var num: int
+	var font: []char
+	+var posId: int
+	+var pos: Pos
+	+var dir: @Dir
 
-	func Init(id: int): @Piece
+	+func init(id: int): @Piece
 		do me.id :: id
 		do me.num :: id + 1
-		do me.font :: Draw@MakeFont()
-		assert @FontSize < 118 {フォントサイズが大きいと落ちるようです。}
-		do me.font.Set(@FontSize, me.num.ToStr(), 3)
+		do me.font :: me.num.toStr()
 		do me.posId :: id
-		do me.pos :: (#Pos).Init(me.posId)
-		do me.dir :: @Dir#Stay
-		return me
+		do me.pos :: (#Pos).init(me.posId)
+		do me.dir :: %stay
+		ret me
 	end func
 
-	func GetId(): int
-		return me.id
+	+func getId(): int
+		ret me.id
 	end func
 
-	func Move(pixelPerFrame: int)
-		if(me.dir = @Dir#Left)
+	+func move(pixelPerFrame: int)
+		if(me.dir = %left)
 			do me.pos.x :- pixelPerFrame
-		elif(me.dir = @Dir#Right)
+		elif(me.dir = %right)
 			do me.pos.x :+ pixelPerFrame
-		elif(me.dir = @Dir#Up)
+		elif(me.dir = %up)
 			do me.pos.y :- pixelPerFrame
-		elif(me.dir = @Dir#Down)
+		elif(me.dir = %down)
 			do me.pos.y :+ pixelPerFrame
 		end if
-		if(me.pos.x % @PieceSize = 0 & me.pos.y % @PieceSize = 0)
-			do me.dir :: @Dir#Stay
+		if(me.pos.x % @pieceSize = 0 & me.pos.y % @pieceSize = 0)
+			do me.dir :: %stay
 		end if
 	end func
 
-	func Draw()
-		if(@SuperEasyMode)
+	+func draw()
+		if(@mode = %easy)
 			{普通の15パズル}
-			do Draw@Rect(me.pos.x$ float + 2.0, me.pos.y$ float + 2.0, @PieceSize$ float - 4.0, @PieceSize$ float - 4.0, 1.0, 1.0, 1.0, 1.0)
-			do me.font.Draw(0, 0, me.pos.x$ float + (@PieceSize$ float - me.font.Width(0, 0)) / 2.0, me.pos.y$ float, 0.0, 0.0, 1.0, 1.0)
+			do draw@rect(
+			|	me.pos.x $ float + 2.0,
+			|	me.pos.y $ float + 2.0,
+			|	@pieceSize $ float - 4.0,
+			|	@pieceSize $ float - 4.0,
+			|	1.0, 1.0, 1.0, 1.0)
+			{
+				FIXME
+				do me.font.draw(
+				|	me.pos.x$ float + (@pieceSize $ float - me.font.Width(0, 0)) / 2.0,
+				|	me.pos.y$ float
+				|	)
+			}
 		else
 			{イラスト版15パズル}
-			do @Tex.DrawScale((Kuin@Cnt()$ float + (me.id % 4)$ float * @TexSize * 0.25) % @TexSize, (Kuin@Cnt()$ float * (@EasyMode ?(0.0, 0.25)) + (me.id / 4)$ float * @TexSize * 0.25) % @TexSize, @TexSize * 0.25, @TexSize * 0.25, me.pos.x$ float, me.pos.y$ float, @PieceSize$ float, @PieceSize$ float, 1.0, 1.0, 1.0, 1.0)
+			do @image.drawScale(
+			|	me.pos.x $ float,
+			|	me.pos.y $ float,
+			|	@pieceSize $ float,
+			|	@pieceSize $ float,
+			|	(@cnt $ float + (me.id % 4) $ float * @imageSize * 0.25) % @imageSize,
+			|	(@cnt $ float * (@mode = %veryHard ?(0.25, 0.0)) + (me.id / 4)$ float * @imageSize * 0.25) % @imageSize,
+			|	@imageSize * 0.25,
+			|	@imageSize * 0.25
+			|)
 		end if
 	end func
 
 	class Pos()
-		var x: int
-		var y: int
-		func Init(posId: int): Pos
-			do me.x :: @PieceSize * (posId % 4)
-			do me.y :: @PieceSize * (posId / 4)
-			return me
+		+var x: int
+		+var y: int
+		+func init(posId: int): Pos
+			do me.x :: @pieceSize * (posId % 4)
+			do me.y :: @pieceSize * (posId / 4)
+			ret me
 		end func
 	end class
 end class
-var Pieces: []@Piece
-var VoidPiece: @Piece
 
-{駒の位置情報を元にその駒のidを返します}
-func FindPieceID(posId: int): int
-	foreach p(@Pieces)
-		if(p.posId = posId)
-			return p.GetId()
-		end if
-	end foreach
-	do Dbg@Log("駒が見つかりません。これはおかしいです。")
-	assert false
-end func
 
-func Init(cfg: Kuin@CCfg)
-	do cfg.Title :: "THE 15 PUZZLE"
-end func
-
-func Main()
-	assert @PieceSize % @PixelPerFrame = 0 {この条件が満たされている前提で駒の移動処理を行います}
-	{画像の初期化}
-	do @Tex :: Draw@LoadTex(@TexName)
-	assert @Tex <>& null
-	do @TextFont :: Draw@MakeFont()
-	do @TextFont2 :: Draw@MakeFont()
-	if(@SuperEasyMode)
-		do @TextFont.Set(30, "普通の15パズル(スーパーイージーモード)です。", 3)
-		do @TextFont2.Set(30, "", 3)
-	else
-		do @TextFont.Set(30, "Kuinの作者くいなちゃんのイラストで遊ぶ15パズルです。", 3)
-		do @TextFont2.Set(30, "※イラストの作者はくいなちゃんです。", 3)
-	end if
-	assert @TextFont <>& null
-	assert @TextFont2 <>& null
-	do @CompleteTex :: Draw@LoadTex(@CompleteTexName)
-	assert @CompleteTex <>& null
-	{駒の初期化}
-	do @Pieces :: #[16]@Piece
-	for i(0, 15)
-		do @Pieces[i] :: (#@Piece).Init(i)
-	end for
-	do @VoidPiece :: @Pieces[15]
-	do @ShufflePieces()
-
-	while a()
-		do Kuin@Act()
-		do drawPieces()
-		do @TextFont.Draw(0, 0, 0.0, @PieceSize$ float * 4.0, 1.0, 1.0, 1.0, 1.0)
-		do @TextFont2.Draw(0, 0, 0.0, @PieceSize$ float * 4.0 + @TextFont.Height(), 1.0, 1.0, 1.0, 1.0)
-		if(!@SuperEasyMode)
-			if(@CompleteCheck())
-				do @CompleteTex.Draw(0.0, 0.0, @CompleteTex.Width(), @CompleteTex.Height(), @PieceSize$ float * 4.0, @PieceSize$ float * 2.0, 1.0, 1.0, 1.0, 1.0)
-			end if
-		end if
-		foreach p(@Pieces) {移動アニメーション用のループです}
-			if(p.dir <> @Dir#Stay)
-				do p.Move(@PixelPerFrame)
-				continue a {移動中にマウス入力を受け付けないように、ここでwhileループの先頭に戻ります}
-			end if
-		end foreach
-
-		do @SetDirection(false)
-		if(Input@Pad(0, Input@EBtn#A) > 0)
-			do @ShufflePieces()
-		end if
-	end while
-
-	func drawPieces()
-		foreach p(@Pieces)
-			if(p <>& @VoidPiece)
-				do p.Draw()
-			end if
-		end foreach
-	end func
-end func
-
-func SetDirection(shuffleMode: bool)
+func setDirection(shuffleMode: bool)
 	var id: int
-	var dir: @Dir :: @Dir#Stay
+	var dir: @Dir :: %stay
 	if(shuffleMode)
-		do dir :: Rnd@Get(1, 4)$ @Dir
+		do dir :: lib@rnd(1, 4)$ @Dir
 	else
-		if(Input@Pad(0, Input@EBtn#Left) % 15 = 1)
-			do dir :: @Dir#Left
-		elif(Input@Pad(0, Input@EBtn#Right) % 15 = 1)
-			do dir :: @Dir#Right
-		elif(Input@Pad(0, Input@EBtn#Up) % 15 = 1)
-			do dir :: @Dir#Up
-		elif(Input@Pad(0, Input@EBtn#Down) % 15 = 1)
-			do dir :: @Dir#Down
+		if(input@pad(0, %left) % 15 = 1)
+			do dir :: %left
+		elif(input@pad(0, %right) % 15 = 1)
+			do dir :: %right
+		elif(input@pad(0, %up) % 15 = 1)
+			do dir :: %up
+		elif(input@pad(0, %down) % 15 = 1)
+			do dir :: %down
 		end if
 	end if
 
 	switch d(dir)
-	case(@Dir#Left)
-		if(@VoidPiece.posId % 4 <> 3)
-			do id :: @FindPieceID(@VoidPiece.posId + 1)
-			do @Pieces[id].dir :: d
-			do @VoidPiece.posId :$ @Pieces[id].posId
+	case(%left)
+		if(@voidPiece.posId % 4 <> 3)
+			do id :: @findPieceID(@voidPiece.posId + 1)
+			do @pieces[id].dir :: d
+			do @voidPiece.posId :$ @pieces[id].posId
 		end if
-	case(@Dir#Right)
-		if(@VoidPiece.posId % 4 <> 0)
-			do id :: @FindPieceID(@VoidPiece.posId - 1)
-			do @Pieces[id].dir :: d
-			do @VoidPiece.posId :$ @Pieces[id].posId
+	case(%right)
+		if(@voidPiece.posId % 4 <> 0)
+			do id :: @findPieceID(@voidPiece.posId - 1)
+			do @pieces[id].dir :: d
+			do @voidPiece.posId :$ @pieces[id].posId
 		end if
-	case(@Dir#Up)
-		if(@VoidPiece.posId / 4 <> 3)
-			do id :: @FindPieceID(@VoidPiece.posId + 4)
-			do @Pieces[id].dir :: d
-			do @VoidPiece.posId :$ @Pieces[id].posId
+	case(%up)
+		if(@voidPiece.posId / 4 <> 3)
+			do id :: @findPieceID(@voidPiece.posId + 4)
+			do @pieces[id].dir :: d
+			do @voidPiece.posId :$ @pieces[id].posId
 		end if
-	case(@Dir#Down)
-		if(@VoidPiece.posId / 4 <> 0)
-			do id :: @FindPieceID(@VoidPiece.posId - 4)
-			do @Pieces[id].dir :: d
-			do @VoidPiece.posId :$ @Pieces[id].posId
+	case(%down)
+		if(@voidPiece.posId / 4 <> 0)
+			do id :: @findPieceID(@voidPiece.posId - 4)
+			do @pieces[id].dir :: d
+			do @voidPiece.posId :$ @pieces[id].posId
 		end if
 	end switch
 
 	if(shuffleMode)
-		do @Pieces[id].Move(@PieceSize)
+		do @pieces[id].move(@pieceSize)
 	end if
 end func
 
-func ShufflePieces()
-	for i(1, @ShuffleNum)
-		do @SetDirection(true)
+enum Dir
+	stay
+	left :: 1
+	right :: 2
+	up :: 3
+	down :: 4
+end enum
+
+func shufflePieces()
+	for i(1, @shuffleNum)
+		do @setDirection(true)
 	end for
 end func
 
-func CompleteCheck(): bool
-	foreach p(@Pieces)
-		if(p.GetId() <> p.posId)
-			return false
+func checkComplete(): bool
+	foreach p(@pieces)
+		if(p.getId() <> p.posId)
+			ret false
 		end if
 	end foreach
-	return true
+	ret true
+end func
+
+{駒の位置情報を元にその駒のidを返します}
+func findPieceID(posId: int): int
+	foreach p(@pieces)
+		if(p.posId = posId)
+			ret p.getId()
+		end if
+	end foreach
+	assert false
 end func
