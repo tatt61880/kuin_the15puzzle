@@ -1,6 +1,6 @@
 {{{
 	15パズル for Kuin 1.01
-	Last Modified: 2017/04/21 01:07:25.
+	Last Modified: 2017/04/24 23:07:33.
 
 	作成:
 		Tatt (@tatt61880)
@@ -50,15 +50,14 @@ func main()
 	do @voidPiece :: @pieces[15]
 	do @shufflePieces()
 
-	{
-	if(@mode = %easy)
-		do wnd@makeLabel(wndMain, 0, @pieceSize * 4, 500, 50, %fix, %fix, "普通の15パズル(イージーモード)です。")
-	else
-		do wnd@makeLabel(wndMain, 0, @pieceSize * 4, 500, 50, %fix, %fix, "Kuinの作者くいなちゃんのイラストで遊ぶ15パズルです。")
-	end if
-	}
-
+	var font: draw@Font :: draw@makeFont("Meiryo", 30, false, false)
 	while a(wnd@act())
+		if(@mode = %easy)
+			do font.draw(0.0, @pieceSize $ float * 4.0, "普通の15パズル(イージーモード)です。", 1.0, 1.0, 1.0, 1.0)
+		else
+			do font.draw(0.0, @pieceSize $ float * 4.0, "Kuinの作者くいなちゃんのイラストで遊ぶ15パズルです。", 1.0, 1.0, 1.0, 1.0)
+		end if
+
 		{ 見本 }
 		do @image.drawScale(
 		|	@pieceSize $ float * 4.0 + 10.0, 0.0,
@@ -90,7 +89,7 @@ func main()
 		end foreach
 
 		do @setDirection(false)
-		if(input@pad(0, %a) > 0)
+		if(input@pad(0, %a) > 30)
 			do @shufflePieces()
 		end if
 
