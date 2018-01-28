@@ -1,6 +1,6 @@
 {{{
 	15パズル for Kuin 1.01
-	Last Modified: 2017/09/18 07:13:54.
+	Last Modified: 2018/01/28 21:00:55.
 
 	作成:
 		Tatt (@tatt61880)
@@ -49,7 +49,7 @@ func main()
 	do @voidPiece :: @pieces[15]
 	do @shufflePieces()
 
-	var font: draw@Font :: draw@makeFont("Meiryo", 30, false, false, false, 24.0)
+	var font: draw@Font :: draw@makeFont("Meiryo", 28, false, false, true, 0.0)
 	while a(wnd@act())
 		if(@mode = %easy)
 			do font.draw(0.0, @pieceSize $ float * 4.0, "普通の15パズル(イージーモード)です。", 16#FFFFFFFF)
