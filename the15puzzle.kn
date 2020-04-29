@@ -207,7 +207,7 @@ func setDirection(shuffleMode: bool)
 		end if
 	end if
 
-	var id: int
+	var id: int :: -1
 	switch(dir)
 	case(%left)
 		if(@voidPiece.posId % 4 <> 3)
@@ -235,7 +235,7 @@ func setDirection(shuffleMode: bool)
 		end if
 	end switch
 
-	if(shuffleMode)
+	if(shuffleMode & id <> -1)
 		do @pieces[id].move(@pieceSize)
 	end if
 end func
