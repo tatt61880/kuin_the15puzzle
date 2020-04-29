@@ -171,7 +171,7 @@ class Piece()
 			|	me.pos.y $ float,
 			|	@pieceSize $ float,
 			|	@pieceSize $ float,
-			|	(@cnt $ float + (me.id % 4) $ float * @imageSize * 0.25) % @imageSize,
+			|	(0.25 * @imageSize * (@cnt $ float / 240.0 - 0.25 * lib@sin(2.0 * lib@pi * @cnt $ float / 240.0)) + (me.id % 4) $ float * @imageSize * 0.25) % @imageSize,
 			|	(@cnt $ float * (@mode = %veryHard ?(0.25, 0.0)) + (me.id / 4)$ float * @imageSize * 0.25) % @imageSize,
 			|	@imageSize * 0.25,
 			|	@imageSize * 0.25,
