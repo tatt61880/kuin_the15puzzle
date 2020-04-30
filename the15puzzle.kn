@@ -13,7 +13,7 @@ enum Mode
 	hard
 	veryHard
 end enum
-const mode: @Mode :: %normal
+const mode: @Mode :: %hard
 
 const pieceSize: int :: 120
 const shuffleNum: int :: 1000
@@ -171,7 +171,7 @@ class Piece()
 			|	me.pos.y $ float,
 			|	@pieceSize $ float,
 			|	@pieceSize $ float,
-			|	(0.25 * @imageSize * (0.05 + @cnt $ float / 240.0 - 0.25 * lib@sin(2.0 * lib@pi * @cnt $ float / 240.0)) + (me.id % 4) $ float * @imageSize * 0.25) % @imageSize,
+			|	(0.25 * @imageSize * (@cnt $ float / 60.0 - 0.15 * lib@sin(2.0 * lib@pi * @cnt $ float / 60.0)) + (me.id % 4) $ float * @imageSize * 0.25) % @imageSize,
 			|	(@cnt $ float * (@mode = %veryHard ?(0.25, 0.0)) + (me.id / 4)$ float * @imageSize * 0.25) % @imageSize,
 			|	@imageSize * 0.25,
 			|	@imageSize * 0.25,
