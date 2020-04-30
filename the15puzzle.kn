@@ -210,31 +210,27 @@ func setDirection(shuffleMode: bool)
 	case(%left)
 		if(@voidPiece.posId % 4 <> 3)
 			do id :: @findPieceID(@voidPiece.posId + 1)
-			do @pieces[id].dir :: dir
-			do @voidPiece.posId :$ @pieces[id].posId
 		end if
 	case(%right)
 		if(@voidPiece.posId % 4 <> 0)
 			do id :: @findPieceID(@voidPiece.posId - 1)
-			do @pieces[id].dir :: dir
-			do @voidPiece.posId :$ @pieces[id].posId
 		end if
 	case(%up)
 		if(@voidPiece.posId / 4 <> 3)
 			do id :: @findPieceID(@voidPiece.posId + 4)
-			do @pieces[id].dir :: dir
-			do @voidPiece.posId :$ @pieces[id].posId
 		end if
 	case(%down)
 		if(@voidPiece.posId / 4 <> 0)
 			do id :: @findPieceID(@voidPiece.posId - 4)
-			do @pieces[id].dir :: dir
-			do @voidPiece.posId :$ @pieces[id].posId
 		end if
 	end switch
 
-	if(shuffleMode & id <> -1)
-		do @pieces[id].move(@pieceSize)
+	if(id <> -1)
+		do @pieces[id].dir :: dir
+		do @voidPiece.posId :$ @pieces[id].posId
+		if(shuffleMode)
+			do @pieces[id].move(@pieceSize)
+		end if
 	end if
 end func
 
