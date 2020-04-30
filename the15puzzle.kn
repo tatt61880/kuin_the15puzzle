@@ -11,12 +11,12 @@ enum Mode
 	hard
 	veryHard
 end enum
-const mode: @Mode :: %hard
+const mode: @Mode :: %veryHard
 
 const pieceSize: int :: 120
 const shuffleNum: int :: 1000
 const pixelPerFrame: int :: @pieceSize / 4
-const imageFilename: []char :: "res/image.png"
+const imageFilename: []char :: "res/the15puzzle.png"
 const completeFilename: []char :: "res/complete.png"
 const imageSize: float :: 400.0
 const windowWidth: int :: @pieceSize * 8 + 10
@@ -53,7 +53,7 @@ func main()
 		if(@mode = %easy)
 			do font.draw(0.0, @pieceSize $ float * 4.0, "  普通の15パズル(イージーモード)です。", 0xFFFFFFFF)
 		else
-			do font.draw(0.0, @pieceSize $ float * 4.0, "  Kuinの作者くいなちゃんのイラストで遊ぶ15パズルです。", 0xFFFFFFFF)
+			do font.draw(0.0, @pieceSize $ float * 4.0, "   停止した瞬間に1～15が並んでいるようにしてください。", 0xFFFFFFFF)
 		end if
 
 		{ 見本 }
@@ -169,8 +169,8 @@ class Piece()
 			|	me.pos.y $ float,
 			|	@pieceSize $ float,
 			|	@pieceSize $ float,
-			|	(0.25 * @imageSize * (@cnt $ float / 60.0 - 0.15 * lib@sin(2.0 * lib@pi * @cnt $ float / 60.0)) + (me.id % 4) $ float * @imageSize * 0.25) % @imageSize,
-			|	(@cnt $ float * (@mode = %veryHard ?(0.25 * @imageSize / 180.0, 0.0)) + (me.id / 4)$ float * @imageSize * 0.25) % @imageSize,
+			|	(0.25 * @imageSize * (@cnt $ float / 60.0 - lib@sin(2.0 * lib@pi * @cnt $ float / 60.0) / (2.0 * lib@pi)) + (me.id % 4) $ float * @imageSize * 0.25) % @imageSize,
+			|	((@mode = %veryHard ?(0.25 * @imageSize * (@cnt $ float / 45.0  - lib@sin(2.0 * lib@pi * @cnt $ float / 45.0) / (2.0 * lib@pi)), 0.0)) + (me.id / 4)$ float * @imageSize * 0.25) % @imageSize,
 			|	@imageSize * 0.25,
 			|	@imageSize * 0.25,
 			|	0xFFFFFFFF
