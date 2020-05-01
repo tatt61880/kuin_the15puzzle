@@ -15,7 +15,8 @@ const mode: @Mode :: %veryHard
 
 const pieceSize: int :: 120
 const shuffleNum: int :: 1000
-const pixelPerFrame: int :: @pieceSize / 5
+const slowRate: int :: 1
+const pixelPerFrame: int :: @pieceSize / (5 * @slowRate)
 const imageFilename: []char :: "res/the15puzzle.png"
 const completeFilename: []char :: "res/complete.png"
 const imageSize: float :: 400.0
@@ -165,7 +166,7 @@ class Piece()
 			}
 		else
 			{イラスト版15パズル}
-			var f: float :: @cnt $ float
+			var f: float :: @cnt $ float / @slowRate $ float
 			do @image.drawScale(
 			|	me.pos.x $ float,
 			|	me.pos.y $ float,
