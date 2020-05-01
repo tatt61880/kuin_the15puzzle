@@ -1,12 +1,11 @@
-{{{
+{
 	15パズル for Kuin 1.2
 	作成:
 		Tatt (@tatt61880)
 		https://twitter.com/tatt61880
-}}}
+}
 
 enum Mode
-	easy
 	normal
 	hard
 	veryHard
@@ -30,7 +29,6 @@ const completeImageHeight: float :: 400.0
 var cnt: int
 
 func main()
-	assert @mode <> %easy {イージーモードは未完成なのです}
 	assert @pieceSize % @pixelPerFrame = 0 {この条件が満たされている前提で駒の移動処理を行います}
 	var wndMain: wnd@Wnd :: wnd@makeWnd(null, %aspect, @windowWidth, @windowHeight, "THE 15 PUZZLE")
 	var drawMain: wnd@Draw :: wnd@makeDraw(wndMain, 0, 0, @windowWidth, @windowHeight, %scale, %scale, false)
@@ -51,13 +49,9 @@ func main()
 	var font: draw@Font :: draw@makeFont("Meiryo", 26, false, false, true, 0.0)
 	while a(wnd@act())
 		do draw@render(60)
-		if(@mode = %easy)
-			do font.draw(0.0, @pieceSize $ float * 4.0, " 普通の15パズル(イージーモード)です。", 0xFFFFFFFF)
-		else
-			do font.draw(0.0, @pieceSize $ float * 4.0, "   停止した瞬間に1～15が並んでいるようにしてください。", 0xFFFFFFFF)
-		end if
+		do font.draw(0.0, @pieceSize $ float * 4.0, "   停止した瞬間に1～15が並んでいるようにしてください。", 0xFFFFFFFF)
 		
-		{ 見本 }
+		{見本}
 		do @image.drawScale(
 		|@pieceSize $ float * 4.0 + 10.0, 0.0,
 		|@pieceSize $ float * 4.0,
@@ -73,7 +67,6 @@ func main()
 		end if
 		do drawPieces()
 		if(false)
-			;if(@mode <> %easy)
 			if(@checkComplete())
 				do @completeImage.draw(
 				|@windowWidth $ float / 2.0 - @completeImageWidth / 2.0,
@@ -149,36 +142,18 @@ class Piece()
 	end func
 	
 	+func draw()
-		if(@mode = %easy)
-			{普通の15パズル}
-			do draw@rect(
-			|me.pos.x $ float + 2.0,
-			|me.pos.y $ float + 2.0,
-			|@pieceSize $ float - 4.0,
-			|@pieceSize $ float - 4.0,
-			|0xFFFFFFFF)
-			{
-				FIXME
-				do me.font.draw(
-				|	me.pos.x$ float + (@pieceSize $ float - me.font.Width(0, 0)) / 2.0,
-				|	me.pos.y$ float
-				|	)
-			}
-		else
-			{イラスト版15パズル}
-			var f: float :: @cnt $ float / @slowRate $ float
-			do @image.drawScale(
-			|me.pos.x $ float,
-			|me.pos.y $ float,
-			|@pieceSize $ float,
-			|@pieceSize $ float,
-			|(0.25 * @imageSize * (f / 60.0 - lib@sin(2.0 * lib@pi * f / 60.0) / (2.0 * lib@pi)) + (me.id % 4) $ float * @imageSize * 0.25) % @imageSize,
-			|((@mode = %veryHard ?(0.25 * @imageSize * (f / 45.0 - lib@sin(2.0 * lib@pi * f / 45.0) / (2.0 * lib@pi)), 0.0)) + (me.id / 4) $ float * @imageSize * 0.25) % @imageSize,
-			|@imageSize * 0.25,
-			|@imageSize * 0.25,
-			|0xFFFFFFFF
-			|)
-		end if
+		var f: float :: @cnt $ float / @slowRate $ float
+		do @image.drawScale(
+		|me.pos.x $ float,
+		|me.pos.y $ float,
+		|@pieceSize $ float,
+		|@pieceSize $ float,
+		|(0.25 * @imageSize * (f / 60.0 - lib@sin(2.0 * lib@pi * f / 60.0) / (2.0 * lib@pi)) + (me.id % 4) $ float * @imageSize * 0.25) % @imageSize,
+		|((@mode = %veryHard ?(0.25 * @imageSize * (f / 45.0 - lib@sin(2.0 * lib@pi * f / 45.0) / (2.0 * lib@pi)), 0.0)) + (me.id / 4) $ float * @imageSize * 0.25) % @imageSize,
+		|@imageSize * 0.25,
+		|@imageSize * 0.25,
+		|0xFFFFFFFF
+		|)
 	end func
 	
 	class Pos()
