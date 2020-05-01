@@ -13,14 +13,14 @@ enum Mode
 end enum
 const mode: @Mode :: %veryHard
 
-const pieceSize: int :: 60
+const pieceSize: int :: 120
 const shuffleNum: int :: 1000
-const pixelPerFrame: int :: @pieceSize / 20
+const pixelPerFrame: int :: @pieceSize / 5
 const imageFilename: []char :: "res/the15puzzle.png"
 const completeFilename: []char :: "res/complete.png"
 const imageSize: float :: 400.0
 const windowWidth: int :: @pieceSize * 8 + 10
-const windowHeight: int :: @pieceSize * 4 + 25
+const windowHeight: int :: @pieceSize * 4 + 50
 
 var image: draw@Tex
 var completeImage: draw@Tex
@@ -32,7 +32,7 @@ func main()
 	assert @mode <> %easy {イージーモードは未完成なのです}
 	assert @pieceSize % @pixelPerFrame = 0 {この条件が満たされている前提で駒の移動処理を行います}
 	var wndMain: wnd@Wnd :: wnd@makeWnd(null, %aspect, @windowWidth, @windowHeight, "THE 15 PUZZLE")
-	var drawMain: wnd@Draw :: wnd@makeDraw(wndMain, 0, 0, 1600, 900, %scale, %scale, false)
+	var drawMain: wnd@Draw :: wnd@makeDraw(wndMain, 0, 0, @windowWidth, @windowHeight, %scale, %scale, false)
 	{画像の初期化}
 	do @image :: draw@makeTex(@imageFilename)
 	assert @image <>& null
@@ -47,13 +47,13 @@ func main()
 	do @voidPiece :: @pieces[15]
 	do @shufflePieces()
 
-	var font: draw@Font :: draw@makeFont("Meiryo", 14, false, false, true, 0.0)
+	var font: draw@Font :: draw@makeFont("Meiryo", 26, false, false, true, 0.0)
 	while a(wnd@act())
 		do draw@render(60)
 		if(@mode = %easy)
 			do font.draw(0.0, @pieceSize $ float * 4.0, " 普通の15パズル(イージーモード)です。", 0xFFFFFFFF)
 		else
-			do font.draw(0.0, @pieceSize $ float * 4.0, " 停止した瞬間に1～15が並んでいるようにしてください。", 0xFFFFFFFF)
+			do font.draw(0.0, @pieceSize $ float * 4.0, "   停止した瞬間に1～15が並んでいるようにしてください。", 0xFFFFFFFF)
 		end if
 
 		{ 見本 }
@@ -165,7 +165,7 @@ class Piece()
 			}
 		else
 			{イラスト版15パズル}
-			var f: float :: @cnt $ float * 0.25
+			var f: float :: @cnt $ float
 			do @image.drawScale(
 			|	me.pos.x $ float,
 			|	me.pos.y $ float,
