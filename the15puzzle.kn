@@ -39,7 +39,7 @@ func main()
 	assert @image <>& null
 	do @completeImage :: draw@makeTex(@completeFilename)
 	assert @completeImage <>& null
-
+	
 	{駒の初期化}
 	do @pieces :: #[16]@Piece
 	for i(0, 15)
@@ -47,7 +47,7 @@ func main()
 	end for
 	do @voidPiece :: @pieces[15]
 	do @shufflePieces()
-
+	
 	var font: draw@Font :: draw@makeFont("Meiryo", 26, false, false, true, 0.0)
 	while a(wnd@act())
 		do draw@render(60)
@@ -56,31 +56,31 @@ func main()
 		else
 			do font.draw(0.0, @pieceSize $ float * 4.0, "   停止した瞬間に1～15が並んでいるようにしてください。", 0xFFFFFFFF)
 		end if
-
+		
 		{ 見本 }
 		do @image.drawScale(
-		|	@pieceSize $ float * 4.0 + 10.0, 0.0,
-		|	@pieceSize $ float * 4.0,
-		|	@pieceSize $ float * 4.0,
-		|	0.0,
-		|	0.0,
-		|	@imageSize,
-		|	@imageSize,
-		|	0xFFFFFFFF
+		|@pieceSize $ float * 4.0 + 10.0, 0.0,
+		|@pieceSize $ float * 4.0,
+		|@pieceSize $ float * 4.0,
+		|0.0,
+		|0.0,
+		|@imageSize,
+		|@imageSize,
+		|0xFFFFFFFF
 		|)
 		if(@mode = %hard | @mode = %veryHard)
 			do @cnt :+ 1
 		end if
 		do drawPieces()
 		if(false)
-		;if(@mode <> %easy)
+			;if(@mode <> %easy)
 			if(@checkComplete())
 				do @completeImage.draw(
-				|	@windowWidth $ float / 2.0 - @completeImageWidth / 2.0,
-				|	@windowHeight $ float / 2.0 - @completeImageHeight / 2.0,
-				|	0.0, 0.0,
-				|	@completeImageWidth, @completeImageHeight,
-				|	0xFFFFFFFF
+				|@windowWidth $ float / 2.0 - @completeImageWidth / 2.0,
+				|@windowHeight $ float / 2.0 - @completeImageHeight / 2.0,
+				|0.0, 0.0,
+				|@completeImageWidth, @completeImageHeight,
+				|0xFFFFFFFF
 				|)
 			end if
 		end if
@@ -91,13 +91,13 @@ func main()
 				skip a {移動中にマウス入力を受け付けないように、ここでwhileループの先頭に戻ります}
 			end if
 		end for
-
+		
 		do @setDirection(false)
 		if(input@pad(0, %a) > 30)
 			do @shufflePieces()
 		end if
 	end while
-
+	
 	func drawPieces()
 		for i(0, ^@pieces - 1)
 			var p: @Piece :: @pieces[i]
@@ -118,7 +118,7 @@ class Piece()
 	+var posId: int
 	+var pos: Pos
 	+var dir: @Dir
-
+	
 	+func init(id: int): @Piece
 		do me.id :: id
 		do me.num :: id + 1
@@ -128,11 +128,11 @@ class Piece()
 		do me.dir :: %stay
 		ret me
 	end func
-
+	
 	+func getId(): int
 		ret me.id
 	end func
-
+	
 	+func move(pixelPerFrame: int)
 		if(me.dir = %left)
 			do me.pos.x :- pixelPerFrame
@@ -147,16 +147,16 @@ class Piece()
 			do me.dir :: %stay
 		end if
 	end func
-
+	
 	+func draw()
 		if(@mode = %easy)
 			{普通の15パズル}
 			do draw@rect(
-			|	me.pos.x $ float + 2.0,
-			|	me.pos.y $ float + 2.0,
-			|	@pieceSize $ float - 4.0,
-			|	@pieceSize $ float - 4.0,
-			|	0xFFFFFFFF)
+			|me.pos.x $ float + 2.0,
+			|me.pos.y $ float + 2.0,
+			|@pieceSize $ float - 4.0,
+			|@pieceSize $ float - 4.0,
+			|0xFFFFFFFF)
 			{
 				FIXME
 				do me.font.draw(
@@ -168,19 +168,19 @@ class Piece()
 			{イラスト版15パズル}
 			var f: float :: @cnt $ float / @slowRate $ float
 			do @image.drawScale(
-			|	me.pos.x $ float,
-			|	me.pos.y $ float,
-			|	@pieceSize $ float,
-			|	@pieceSize $ float,
-			|	(0.25 * @imageSize * (f / 60.0 - lib@sin(2.0 * lib@pi * f / 60.0) / (2.0 * lib@pi)) + (me.id % 4) $ float * @imageSize * 0.25) % @imageSize,
-			|	((@mode = %veryHard ?(0.25 * @imageSize * (f / 45.0  - lib@sin(2.0 * lib@pi * f / 45.0) / (2.0 * lib@pi)), 0.0)) + (me.id / 4)$ float * @imageSize * 0.25) % @imageSize,
-			|	@imageSize * 0.25,
-			|	@imageSize * 0.25,
-			|	0xFFFFFFFF
+			|me.pos.x $ float,
+			|me.pos.y $ float,
+			|@pieceSize $ float,
+			|@pieceSize $ float,
+			|(0.25 * @imageSize * (f / 60.0 - lib@sin(2.0 * lib@pi * f / 60.0) / (2.0 * lib@pi)) + (me.id % 4) $ float * @imageSize * 0.25) % @imageSize,
+			|((@mode = %veryHard ?(0.25 * @imageSize * (f / 45.0 - lib@sin(2.0 * lib@pi * f / 45.0) / (2.0 * lib@pi)), 0.0)) + (me.id / 4) $ float * @imageSize * 0.25) % @imageSize,
+			|@imageSize * 0.25,
+			|@imageSize * 0.25,
+			|0xFFFFFFFF
 			|)
 		end if
 	end func
-
+	
 	class Pos()
 		+var x: int
 		+var y: int
@@ -195,7 +195,7 @@ end class
 func setDirection(shuffleMode: bool)
 	var dir: @Dir :: %stay
 	if(shuffleMode)
-		do dir :: lib@rnd(1, 4)$ @Dir
+		do dir :: lib@rnd(1, 4) $ @Dir
 	else
 		if(input@pad(0, %left) % 15 = 1)
 			do dir :: %left
@@ -207,27 +207,27 @@ func setDirection(shuffleMode: bool)
 			do dir :: %down
 		end if
 	end if
-
+	
 	var id: int :: -1
 	switch(dir)
-	case(%left)
+	case (%left)
 		if(@voidPiece.posId % 4 <> 3)
 			do id :: @findPieceID(@voidPiece.posId + 1)
 		end if
-	case(%right)
+	case (%right)
 		if(@voidPiece.posId % 4 <> 0)
 			do id :: @findPieceID(@voidPiece.posId - 1)
 		end if
-	case(%up)
+	case (%up)
 		if(@voidPiece.posId / 4 <> 3)
 			do id :: @findPieceID(@voidPiece.posId + 4)
 		end if
-	case(%down)
+	case (%down)
 		if(@voidPiece.posId / 4 <> 0)
 			do id :: @findPieceID(@voidPiece.posId - 4)
 		end if
 	end switch
-
+	
 	if(id <> -1)
 		do @pieces[id].dir :: dir
 		do @voidPiece.posId :$ @pieces[id].posId
