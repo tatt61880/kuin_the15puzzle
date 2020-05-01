@@ -164,13 +164,14 @@ class Piece()
 			}
 		else
 			{イラスト版15パズル}
+			var f: float :: @cnt $ float
 			do @image.drawScale(
 			|	me.pos.x $ float,
 			|	me.pos.y $ float,
 			|	@pieceSize $ float,
 			|	@pieceSize $ float,
-			|	(0.25 * @imageSize * (@cnt $ float / 60.0 - lib@sin(2.0 * lib@pi * @cnt $ float / 60.0) / (2.0 * lib@pi)) + (me.id % 4) $ float * @imageSize * 0.25) % @imageSize,
-			|	((@mode = %veryHard ?(0.25 * @imageSize * (@cnt $ float / 45.0  - lib@sin(2.0 * lib@pi * @cnt $ float / 45.0) / (2.0 * lib@pi)), 0.0)) + (me.id / 4)$ float * @imageSize * 0.25) % @imageSize,
+			|	(0.25 * @imageSize * (f / 60.0 - lib@sin(2.0 * lib@pi * f / 60.0) / (2.0 * lib@pi)) + (me.id % 4) $ float * @imageSize * 0.25) % @imageSize,
+			|	((@mode = %veryHard ?(0.25 * @imageSize * (f / 45.0  - lib@sin(2.0 * lib@pi * f / 45.0) / (2.0 * lib@pi)), 0.0)) + (me.id / 4)$ float * @imageSize * 0.25) % @imageSize,
 			|	@imageSize * 0.25,
 			|	@imageSize * 0.25,
 			|	0xFFFFFFFF
