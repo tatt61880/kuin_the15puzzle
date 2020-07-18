@@ -205,7 +205,9 @@ func setDirection(shuffleMode: bool)
 	
 	if(id <> -1)
 		do @pieces[id].dir :: dir
-		do @voidPiece.posId :$ @pieces[id].posId
+		var tmp: int :: @voidPiece.posId
+		do @voidPiece.posId :: @pieces[id].posId
+		do @pieces[id].posId :: tmp
 		if(shuffleMode)
 			do @pieces[id].move(@pieceSize)
 		end if
